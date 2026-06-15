@@ -71,7 +71,7 @@ jobs:
       # Executes scripts/fetch_data.py (we'll create that file next).
       # That script pulls NFL data and writes data/team_stats_2025.parquet.
       - name: Fetch NFL data
-        run: python scripts/fetch_data.py
+        run: python scripts/fetch-data.py
 
       # ── Step 5: Commit and push the data file ─────────────────────────────
       # After fetch_data.py writes the parquet file, we need to commit it
