@@ -28,14 +28,14 @@ on:
   schedule:
     - cron: "0 11 * * 2"
 
-permissions:
-  contents: write
-
   # ── Manual trigger ─────────────────────────────────────────────────────────
   # This adds a "Run workflow" button on the GitHub Actions tab in your repo.
   # Useful for: testing the workflow for the first time, forcing a refresh
   # mid-week, or re-running after fixing a bug.
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   refresh:
