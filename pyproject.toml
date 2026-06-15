@@ -1,0 +1,10 @@
+[project]
+name = "nfl-reporter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "marimo[recommended]>=0.23.9",
+    "nflreadpy>=0.1.5",
+]
