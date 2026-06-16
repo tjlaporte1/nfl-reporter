@@ -39,10 +39,8 @@ def _():
     import marimo as mo
     import polars as pl
     import nflreadpy as nfl
-    import urllib.request
-    import io
 
-    return io, nfl, pl, urllib
+    return nfl, pl
 
 
 @app.cell
@@ -61,21 +59,21 @@ def _(nfl, pl):
 
 
 @app.cell
-def data_url(io, pl, urllib):
+def data_url(pl):
     BASE_DATA_URL = "https://raw.githubusercontent.com/tjlaporte1/nfl-reporter/main/data/"
 
-    def load_parquet(filename: str) -> pl.DataFrame:
-        """
-        Fetches a parquet file from the GitHub data folder and returns
-        it as a Polars DataFrame.
+    teams_df = pl.read_parquet(f"{BASE_DATA_URL}{"teams.parquet"}")
+    schedules_df = pl.read_parquet(f"{BASE_DATA_URL}{"schedules.parquet"}")
+    team_stats_df = pl.read_parquet(f"{BASE_DATA_URL}{"team-stats.parquet"}")
+    player_stats_df = pl.read_parquet(f"{BASE_DATA_URL}{"player-stats.parquet"}")
+    rosters_df = pl.read_parquet(f"{BASE_DATA_URL}{"rosters.parquet"}")
+    injuries_df = pl.read_parquet(f"{BASE_DATA_URL}{"injuries.parquet"}")
+    return (team_stats_df,)
 
-        filename: just the filename, e.g. "team-stats.parquet"
-        """
-        url = BASE_DATA_URL + filename
-        with urllib.request.urlopen(url) as response:
-            raw_bytes = response.read()
-        return pl.read_parquet(io.BytesIO(raw_bytes))
 
+@app.cell
+def _(team_stats_df):
+    team_stats_df
     return
 
 
