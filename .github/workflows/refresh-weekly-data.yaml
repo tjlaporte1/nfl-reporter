@@ -16,7 +16,7 @@
 # 5. Commits and pushes the files back to the repo automatically
 # ─────────────────────────────────────────────────────────────────────────────
 
-name: Refresh NFL Data
+name: Refresh NFL Weekly Team & Player Data
 
 on:
   # ── Scheduled trigger ──────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ permissions:
   contents: write
 
 jobs:
-  refresh:
+  weekly-refresh-job:
     # ── Runner ───────────────────────────────────────────────────────────────
     # "ubuntu-latest" = a fresh Linux virtual machine spun up by GitHub.
     # It's wiped and recreated every run — nothing persists between runs
@@ -50,13 +50,13 @@ jobs:
       # This clones your GitHub repo onto the temporary Ubuntu machine so the
       # workflow can read your scripts and write the data files.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ── Step 2: Set up Python ──────────────────────────────────────────────
       # Installs Python 3.14 on the Ubuntu machine.
       # actions/setup-python is a pre-built action maintained by GitHub.
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.14"
 
