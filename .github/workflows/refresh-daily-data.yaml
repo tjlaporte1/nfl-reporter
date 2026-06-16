@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# refresh_data.yml — Weekly NFL Data Refresh
+# Refresh NFL Daily Data
 #
 # WHAT THIS FILE IS:
 # A GitHub Actions "workflow" — a set of automated instructions that GitHub
@@ -8,30 +8,28 @@
 # it lives in the special `.github/workflows/` folder.
 #
 # WHAT IT DOES:
-# 1. Wakes up every Tuesday at 6 AM ET (after Monday Night Football is final)
+# 1. Runs daily during Jan, Feb, Sept, Oct, Nov, Dec at 11:00 UTC
 # 2. Installs Python + nflreadpy + polars on a temporary GitHub server
-# 3. Runs scripts/fetch_data.py to pull the latest 2025 NFL team stats
-# 4. Saves the result to data/team_stats_2025.parquet in your repo
-# 5. Commits and pushes that file back to the repo automatically
-#
-# Your Marimo notebook on molab then reads that file via its raw GitHub URL.
+# 3. Runs scripts/fetch-daily-data.py to pull latest rosters and injury data
+# 4. Saves results to rosters.parquet and injuries.parquet in your repo
+# 5. Commits and pushes the files back to the repo automatically
 # ─────────────────────────────────────────────────────────────────────────────
 
-name: Refresh NFL Data
+name: Refresh NFL Roster and Injury Data
 
 on:
   # ── Scheduled trigger ──────────────────────────────────────────────────────
   # Cron syntax: minute  hour  day-of-month  month  day-of-week
-  # "0 11 * * 2" = at 11:00 UTC every Tuesday
-  # UTC 11:00 = ET 7:00 AM (EST) or 6:00 AM (EDT during season)
-  # Monday Night Football typically ends by 11:30 PM ET, so Tuesday 6 AM is safe.
+  # "0 11 * 1,2,9,10,11,12 *" = at 11:00 UTC every day in Jan, Feb, Sept, Oct, Nov, Dec
+  # UTC 11:00 = ET 7:00 AM (EST) or 6:00 AM (EDT)
+  # These months cover the NFL pre-season, regular season, and playoffs.
   schedule:
-    - cron: "0 11 * * 2"
+    - cron: "0 11 * 1,2,9,10,11,12 *"
 
   # ── Manual trigger ─────────────────────────────────────────────────────────
   # This adds a "Run workflow" button on the GitHub Actions tab in your repo.
-  # Useful for: testing the workflow for the first time, forcing a refresh
-  # mid-week, or re-running after fixing a bug.
+  # Useful for: testing the workflow, forcing a mid-season refresh, or re-running
+  # after fixing a bug.
   workflow_dispatch:
 
 permissions:
@@ -48,7 +46,7 @@ jobs:
     steps:
       # ── Step 1: Check out your repo ────────────────────────────────────────
       # This clones your GitHub repo onto the temporary Ubuntu machine so the
-      # workflow can read your scripts and write the data file.
+      # workflow can read your scripts and write the data files.
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -62,36 +60,36 @@ jobs:
 
       # ── Step 3: Install dependencies ───────────────────────────────────────
       # pip install runs on the Ubuntu machine (not in a browser — full pip
-      # works here). We install exactly what fetch_data.py needs.
+      # works here). We install exactly what fetch-daily-data.py needs.
       - name: Install dependencies
         run: |
           pip install nflreadpy polars pyarrow
 
       # ── Step 4: Run the data fetch script ─────────────────────────────────
-      # Executes scripts/fetch_data.py (we'll create that file next).
-      # That script pulls NFL data and writes data/team_stats_2025.parquet.
+      # Executes scripts/fetch-daily-data.py which pulls rosters and injury data
+      # and writes rosters.parquet and injuries.parquet to the data/ folder.
       - name: Fetch NFL data
-        run: python scripts/fetch-data.py
+        run: python scripts/fetch-daily-data.py
 
-      # ── Step 5: Commit and push the data file ─────────────────────────────
-      # After fetch_data.py writes the parquet file, we need to commit it
-      # back to the repo so the molab notebook can read it via raw GitHub URL.
+      # ── Step 5: Commit and push the data files ───────────────────────────────
+      # After fetch-daily-data.py writes the parquet files, we need to commit
+      # them back to the repo so dashboards and notebooks can read them.
       #
       # git config: sets a name/email for the automated commit. GitHub Actions
       # doesn't have a "real" user, so we use a conventional bot identity.
       #
-      # git add: stages only the data file (not any accidental other changes).
+      # git add: stages the data files (not any accidental other changes).
       #
       # git diff --staged --quiet: checks if there's actually anything new to
-      # commit. If nflreadpy returned the same data as last week (e.g., bye
-      # week or no new games), we skip the commit to keep history clean.
+      # commit. If nflreadpy returned the same data as last run, we skip the
+      # commit to keep history clean.
       #
       # git push: pushes back to the main branch of your repo.
       - name: Commit updated data
         run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/team-stats-curr-season.parquet
+          git add data/rosters.parquet data/injuries.parquet
           if git diff --staged --quiet; then
             echo "No changes to commit — data unchanged since last run."
           else
