@@ -54,7 +54,7 @@ jobs:
       # Installs Python 3.14 on the Ubuntu machine.
       # actions/setup-python is a pre-built action maintained by GitHub.
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
