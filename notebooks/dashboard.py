@@ -40,54 +40,42 @@ def _():
     import polars as pl
     import nflreadpy as nfl
     import urllib.request
+    import io
 
-    return mo, nfl, pl, urllib
+    return io, nfl, pl, urllib
 
 
 @app.cell
-def _(nfl, pl):
-    nfl.load_depth_charts().filter(pl.col("team") == "PHI")
-    # _df.filter(pl.col("player_id") == "00-0023459")
+def _(nfl):
+    nfl.load_injuries()
     return
 
 
 @app.cell
-def data_url():
-    DATA_URL = (
-        "https://raw.githubusercontent.com/"
-        "YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/"
-        "main/data/team_stats_2025.json"
-    )
-    return (DATA_URL,)
+def _(nfl, pl):
+    max_season = nfl.load_team_stats(summary_level="reg").select(pl.col("season").max()).item()
+    seasons = list(range(max_season - 3, max_season + 1))
+
+    print(seasons)
+    return
 
 
 @app.cell
-def _(DATA_URL, mo, pl, urllib):
-    try:
-        with urllib.request.urlopen(DATA_URL) as response:
+def data_url(io, pl, urllib):
+    BASE_DATA_URL = "https://raw.githubusercontent.com/tjlaporte1/nfl-reporter/main/data/"
+
+    def load_parquet(filename: str) -> pl.DataFrame:
+        """
+        Fetches a parquet file from the GitHub data folder and returns
+        it as a Polars DataFrame.
+
+        filename: just the filename, e.g. "team-stats.parquet"
+        """
+        url = BASE_DATA_URL + filename
+        with urllib.request.urlopen(url) as response:
             raw_bytes = response.read()
+        return pl.read_parquet(io.BytesIO(raw_bytes))
 
-        df = pl.read_json(raw_bytes)
-
-        mo_status = mo.callout(
-            mo.md(f"✅ **Data loaded successfully** — {df.shape[0]} rows, {df.shape[1]} columns"),
-            kind="success",
-        )
-
-    except Exception as e:
-        # If loading fails, df is set to an empty DataFrame so downstream
-        # cells don't crash — they'll just show empty charts.
-        df = pl.DataFrame()
-        mo_status = mo.callout(
-            mo.md(f"❌ **Could not load data:** `{e}`\n\nCheck that the DATA_URL in Cell 3 points to your repo."),
-            kind="danger",
-        )
-    return (mo_status,)
-
-
-@app.cell
-def _(mo_status):
-    mo_status
     return
 
 
