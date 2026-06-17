@@ -38,24 +38,8 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import polars as pl
-    import nflreadpy as nfl
 
-    return nfl, pl
-
-
-@app.cell
-def _(nfl):
-    nfl.load_injuries()
-    return
-
-
-@app.cell
-def _(nfl, pl):
-    max_season = nfl.load_team_stats(summary_level="reg").select(pl.col("season").max()).item()
-    seasons = list(range(max_season - 3, max_season + 1))
-
-    print(seasons)
-    return
+    return (pl,)
 
 
 @app.cell
