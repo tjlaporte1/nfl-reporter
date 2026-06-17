@@ -3,6 +3,7 @@
 # dependencies = [
 #   "marimo",
 #   "polars",
+#   "pyarrow",
 #   "plotly",
 # ]
 # ///
