@@ -47,18 +47,24 @@ def _():
 def data_url(pl):
     BASE_DATA_URL = "https://raw.githubusercontent.com/tjlaporte1/nfl-reporter/main/data/"
 
-    teams_df = pl.read_parquet(f"{BASE_DATA_URL}{"teams.parquet"}")
-    schedules_df = pl.read_parquet(f"{BASE_DATA_URL}{"schedules.parquet"}")
-    team_stats_df = pl.read_parquet(f"{BASE_DATA_URL}{"team-stats.parquet"}")
-    player_stats_df = pl.read_parquet(f"{BASE_DATA_URL}{"player-stats.parquet"}")
-    rosters_df = pl.read_parquet(f"{BASE_DATA_URL}{"rosters.parquet"}")
-    injuries_df = pl.read_parquet(f"{BASE_DATA_URL}{"injuries.parquet"}")
-    return (team_stats_df,)
+    teams_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"teams.parquet"}")
+    schedules_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"schedules.parquet"}")
+    team_stats_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"team-stats.parquet"}")
+    player_stats_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"player-stats.parquet"}")
+    rosters_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"rosters.parquet"}")
+    injuries_lf = pl.scan_parquet(f"{BASE_DATA_URL}{"injuries.parquet"}")
+    return team_stats_lf, teams_lf
 
 
 @app.cell
-def _(team_stats_df):
-    team_stats_df
+def _(team_stats_lf):
+    team_stats_lf
+    return
+
+
+@app.cell
+def _(teams_lf):
+    teams_lf.collect()
     return
 
 
