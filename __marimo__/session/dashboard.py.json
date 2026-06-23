@@ -1,0 +1,100 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.10",
+    "script_metadata_hash": "a4e479da9d5bd0a8a0bc4509839246d6"
+  },
+  "cells": [
+    {
+      "id": "OxZV",
+      "code_hash": "18603b4fa463e71b0d5c432e8bb50e61",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">NFL Reporter - 2025 Season</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "80e646d0bb2100c6e383a6bdeeb7e780",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "uFMH",
+      "code_hash": "321156fa8839894b198a3555e5e1b694",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<img src='https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/NFL.png' style='width: 120px' />"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "59b1df7109c97478c14fe1b5d76cd92b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "007ad724c5bad1376769f0ff8cbfd8fe",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "d70d5d733857b00300c7ad38bc4d8b51",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='6cc1917d-4feb-a24a-296a-0d4cbb79ea73'><marimo-dropdown data-initial-value='[&quot;Arizona Cardinals&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eSelect a team:&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;Arizona Cardinals&quot;,&quot;Atlanta Falcons&quot;,&quot;Baltimore Ravens&quot;,&quot;Buffalo Bills&quot;,&quot;Carolina Panthers&quot;,&quot;Chicago Bears&quot;,&quot;Cincinnati Bengals&quot;,&quot;Cleveland Browns&quot;,&quot;Dallas Cowboys&quot;,&quot;Denver Broncos&quot;,&quot;Detroit Lions&quot;,&quot;Green Bay Packers&quot;,&quot;Houston Texans&quot;,&quot;Indianapolis Colts&quot;,&quot;Jacksonville Jaguars&quot;,&quot;Kansas City Chiefs&quot;,&quot;Las Vegas Raiders&quot;,&quot;Los Angeles Chargers&quot;,&quot;Los Angeles Rams&quot;,&quot;Miami Dolphins&quot;,&quot;Minnesota Vikings&quot;,&quot;New England Patriots&quot;,&quot;New Orleans Saints&quot;,&quot;New York Giants&quot;,&quot;New York Jets&quot;,&quot;Oakland Raiders&quot;,&quot;Philadelphia Eagles&quot;,&quot;Pittsburgh Steelers&quot;,&quot;San Diego Chargers&quot;,&quot;San Francisco 49ers&quot;,&quot;Seattle Seahawks&quot;,&quot;St. Louis Rams&quot;,&quot;Tampa Bay Buccaneers&quot;,&quot;Tennessee Titans&quot;,&quot;Washington Commanders&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "78ad215df6f298cba2e638feb9a1bd60",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='0e02ddd5-fb06-b705-fa93-843ea8a5851a'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;team_abbr&#92;&quot;:&#92;&quot;NYJ&#92;&quot;,&#92;&quot;team_name&#92;&quot;:&#92;&quot;New York Jets&#92;&quot;,&#92;&quot;team_id&#92;&quot;:&#92;&quot;3430&#92;&quot;,&#92;&quot;team_nick&#92;&quot;:&#92;&quot;Jets&#92;&quot;,&#92;&quot;team_conf&#92;&quot;:&#92;&quot;AFC&#92;&quot;,&#92;&quot;team_division&#92;&quot;:&#92;&quot;AFC East&#92;&quot;,&#92;&quot;team_color&#92;&quot;:&#92;&quot;#003F2D&#92;&quot;,&#92;&quot;team_color2&#92;&quot;:&#92;&quot;#000000&#92;&quot;,&#92;&quot;team_color3&#92;&quot;:null,&#92;&quot;team_color4&#92;&quot;:null,&#92;&quot;team_logo_wikipedia&#92;&quot;:&#92;&quot;https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/New_York_Jets_logo.svg/100px-New_York_Jets_logo.svg.png&#92;&quot;,&#92;&quot;team_logo_espn&#92;&quot;:&#92;&quot;https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png&#92;&quot;,&#92;&quot;team_wordmark&#92;&quot;:&#92;&quot;https://github.com/nflverse/nflverse-pbp/raw/master/wordmarks/NYJ.png&#92;&quot;,&#92;&quot;team_conference_logo&#92;&quot;:&#92;&quot;https://github.com/nflverse/nflverse-pbp/raw/master/AFC.png&#92;&quot;,&#92;&quot;team_league_logo&#92;&quot;:&#92;&quot;https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/NFL.png&#92;&quot;,&#92;&quot;team_logo_squared&#92;&quot;:&#92;&quot;https://github.com/nflverse/nflverse-pbp/raw/master/squared_logos/NYJ.png&#92;&quot;}]&quot;' data-total-rows='1' data-total-columns='16' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='false' data-page-size='10' data-field-types='[[&quot;team_abbr&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_name&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_id&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_nick&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_conf&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_division&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_color&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_color2&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_color3&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_color4&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_logo_wikipedia&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_logo_espn&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_wordmark&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_conference_logo&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_league_logo&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;team_logo_squared&quot;,[&quot;string&quot;,&quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-show-data-types='true' data-show-page-size-selector='false' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
