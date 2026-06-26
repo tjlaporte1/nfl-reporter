@@ -43,13 +43,13 @@ app = marimo.App(
 @app.cell
 def _(c, max_season, max_week, mo, teams_lf):
     league_logo_src = teams_lf.select(c.team_league_logo).unique().collect().head(1).item()  # ty:ignore[unresolved-attribute]
-    leage_logo = mo.image(src=league_logo_src, width=120, alt="")
+    leage_logo = mo.image(src=league_logo_src, width=60, alt="")
 
     title_stack = mo.hstack(
         [
             leage_logo,
             mo.md(f"""
-    # NFL Reporter - {str(max_season)} Season
+    ### NFL Reporter - {str(max_season)} Season
     """),
         ],
         justify="start",
@@ -125,12 +125,6 @@ def _(injuries_lf, mo, player_stats_lf, tabs, team_stats_lf):
 
 
 @app.cell
-def _(max_week):
-    max_week
-    return
-
-
-@app.cell
 def _():
     import marimo as mo
     import polars as pl
@@ -175,14 +169,6 @@ def _(c, nfl, pl):
         team_stats_lf,
         teams_lf,
     )
-
-
-@app.cell
-def _(mo, schedules_lf):
-    df = schedules_lf.collect()
-
-    mo.ui.dataframe(df)
-    return
 
 
 @app.cell
@@ -350,7 +336,7 @@ def _(max_season, mo, pl, schedules_display, week_dropdown):
     schedule_content = mo.vstack([
 
         # Header section
-        mo.md(f"## {max_season} Season Schedule"),
+        mo.md(f"### {max_season} Season Schedule"),
         mo.md("Game times shown in Eastern Time. Scores shown for completed games."),
 
         # Dropdown filter — sits above the table
