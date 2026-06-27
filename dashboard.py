@@ -32,12 +32,8 @@
 
 import marimo
 
-__generated_with = "0.23.11"
-app = marimo.App(
-    width="medium",
-    app_title="NFL Reporter",
-    layout_file="layouts/dashboard.grid.json",
-)
+__generated_with = "0.23.9"
+app = marimo.App(width="medium", app_title="NFL Reporter")
 
 
 @app.cell
@@ -49,7 +45,7 @@ def _(c, max_season, max_week, mo, teams_lf):
         [
             leage_logo,
             mo.md(f"""
-    ### NFL Reporter - {str(max_season)} Season
+    ## NFL Reporter - {str(max_season)} Season
     """),
         ],
         justify="start",
@@ -59,7 +55,7 @@ def _(c, max_season, max_week, mo, teams_lf):
 
     tabs = mo.ui.tabs(
         {
-            "League": mo.md("_League overview coming soon_"),
+            "League": mo.md("_Schedule & Stats_"),
             "My Team": mo.md("_Team stats coming soon_"),
             "Players": mo.md("_Player stats coming soon_"),
             "Injuries": mo.md("_Injury report coming soon_"),
@@ -67,24 +63,46 @@ def _(c, max_season, max_week, mo, teams_lf):
         lazy=True,
     )
 
-    week_num_stack = mo.hstack([mo.md(f"_Week {max_week}_")],justify="end", align="center")
+    week_num_stack = mo.hstack([mo.md(f"_Week {max_week}_")], justify="end", align="center")
 
-    header_stack = mo.hstack(
-        [title_stack, tabs, week_num_stack], justify="space-between", align="center",)
+    header_stack = mo.Html(
+        f"""<div style="width: 100%;">
+            {mo.vstack(
+                [
+                    mo.hstack(
+                        [title_stack, week_num_stack],
+                        justify="space-between",
+                        align="center",
+                    ),
+                    mo.hstack(
+                        [tabs],
+                        justify="center",
+                        align="center",
+                    ),
+                ],
+                align="stretch",
+            ).text}
+        </div>"""
+    )
 
     header_stack
     return (tabs,)
 
 
 @app.cell
-def _(injuries_lf, mo, player_stats_lf, tabs, team_stats_lf):
+def _(page_content):
+    page_content
+    return
+
+
+@app.cell
+def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
     if "League" in tabs.value:
         # The League page will eventually show league-wide EPA trends,
         # standings, and win/loss summaries.
         page_content = mo.vstack(
             [
-                mo.md("# 🏈 League Overview"),
-                mo.md("_League-wide charts go here_"),
+                schedule_content
             ]
         )
 
@@ -121,7 +139,7 @@ def _(injuries_lf, mo, player_stats_lf, tabs, team_stats_lf):
         # Fallback — shown briefly on first load before nav_tabs.value
         # is set, or if something unexpected happens.
         page_content = mo.md("_Select a page from the sidebar_")
-    return
+    return (page_content,)
 
 
 @app.cell
@@ -131,11 +149,6 @@ def _():
     from polars import col as c
     import nflreadpy as nfl
 
-    return c, mo, nfl, pl
-
-
-@app.cell
-def _(c, nfl, pl):
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
         nfl.load_team_stats(summary_level="reg").select(pl.col("season").max()).item()
@@ -161,9 +174,12 @@ def _(c, nfl, pl):
 
     max_week = int(max_week) if max_week is not None else 0
     return (
+        c,
         injuries_lf,
         max_season,
         max_week,
+        mo,
+        pl,
         player_stats_lf,
         schedules_lf,
         team_stats_lf,
@@ -172,39 +188,29 @@ def _(c, nfl, pl):
 
 
 @app.cell
-def _(teams_lf):
-    team_options = (
-        teams_lf.select("team_name")
-        .unique()
-        .sort("team_name")
-        .collect()
-        .get_column("team_name")  # ty:ignore[unresolved-attribute]
-        .to_list()
-    )
-    return (team_options,)
-
-
-@app.cell
-def _(mo, team_options):
-    team_dropdown = mo.ui.dropdown(
-        options=team_options,
-        value=team_options[0],
-        label="Select a team:",
-    )
+def _(team_dropdown):
     team_dropdown
-    return (team_dropdown,)
-
-
-@app.cell
-def _():
     return
 
 
 @app.cell
-def _(mo, pl, schedules_lf):
+def _(c, mo, schedules_lf, teams_lf):
+    team_map = {
+        row[1]: row[0]   # full name → abbreviation
+        for row in teams_lf.select(["team_abbr", "team_name"]).sort("team_name").collect().rows() # type: ignore
+    }
+
+    # Prepend "All Teams" as the default option
+    team_options = ["All Teams"] + list(team_map.keys())
+
+    team_dropdown = mo.ui.dropdown(
+        options=team_options,
+        value="All Teams",
+        label="Team",
+    )
+
     week_options = (
-        schedules_lf
-        .filter(pl.col("season") == 2026)
+        schedules_lf # type: ignore
         .select("week")
         .unique()
         .sort("week")
@@ -220,34 +226,57 @@ def _(mo, pl, schedules_lf):
         value="All Weeks",
         label="Filter by Week",
     )
-    return week_dropdown, week_options
+
+    game_types = (
+        schedules_lf # type: ignore
+        .select(c.game_type
+        .replace(
+                {
+                    "REG": "Regular Season",
+                    "WC": "Wild Card",
+                    "DIV": "Divisional",
+                    "CON": "Conference Championship",
+                    "SB": "Super Bowl",
+                }
+            )
+            .alias("game_type"))
+        .collect()
+        .to_series()
+        .to_list() 
+    )
+
+    game_type_options = ["All"] + [f"{g}" for g in game_types]
+
+    game_type_dropdown = mo.ui.dropdown(
+        options=game_type_options,
+        value="All",
+        label="Filter by Game Type"
+    )
+    return game_type_dropdown, team_dropdown, team_map, week_dropdown
 
 
 @app.cell
-def _(week_options):
-    week_options
-    return
-
-
-@app.cell
-def _(week_dropdown):
-    week_dropdown
-    return
-
-
-@app.cell
-def _(pl, schedules_lf):
+def _(
+    game_type_dropdown,
+    max_season,
+    mo,
+    pl,
+    schedules_lf,
+    team_dropdown,
+    team_map,
+    week_dropdown,
+):
     _lf = (
         schedules_lf.select(
             [
                 "week",
                 "game_type",
+                "away_team",
+                "home_team",
                 "gameday",
                 "weekday",
                 "gametime",
-                "away_team",
                 "away_score",
-                "home_team",
                 "home_score",
                 "stadium",
             ]
@@ -300,77 +329,90 @@ def _(pl, schedules_lf):
         )
     )
 
-    schedules_display = _lf.select([
+    schedules_display = _lf.select(
+        [
             "week",
             "game_type",
+            "away_team",
+            "home_team",
             "matchup",
             "date_display",
             "weekday",
             "time_display",
             "status",
             "stadium",
-        ])
-    return (schedules_display,)
+        ]
+    ).collect()
 
-
-@app.cell
-def _(max_season, mo, pl, schedules_display, week_dropdown):
-    _schedule_collected = schedules_display.collect()
-
-    selected_week = week_dropdown.value      # e.g. "Week 3" or "All Weeks"
+    selected_week = week_dropdown.value  # e.g. "Week 3" or "All Weeks"
+    selected_team = team_dropdown.value  # e.g. "Philadelphia Eagles" or "All Teams"
+    selected_game_type = game_type_dropdown.value
 
     # Filter the already-collected DataFrame based on the selection.
     # Because _schedule_collected is a regular DataFrame (not LazyFrame),
     # we use .filter() directly — no need to .collect() again.
     if selected_week == "All Weeks":
-        _filtered = _schedule_collected      # no filter, show everything
+        _filtered = schedules_display  # no filter, show everything
     else:
         # Extract the integer from "Week 3" → 3
         # int(selected_week.split(" ")[1]) splits "Week 3" into ["Week", "3"]
         # and converts "3" to the integer 3.
         week_num = int(selected_week.split(" ")[1])
-        _filtered = _schedule_collected.filter(pl.col("week") == week_num)
+        _filtered = schedules_display.filter(pl.col("week") == week_num)  # type: ignore
+
+    if selected_game_type != "All":
+        _filtered = _filtered.filter(pl.col("game_type") == selected_game_type)
+
+    if selected_team != "All Teams":
+        team_abbr = team_map[selected_team]  # "Philadelphia Eagles" → "PHI"
+        _filtered = _filtered.filter(
+            (pl.col("away_team") == team_abbr)  # PHI is the away team, OR
+            | (pl.col("home_team") == team_abbr)  # PHI is the home team
+        )
 
     # ── Build the final tab layout ─────────────────────────────────────────────
     # mo.vstack stacks: header → controls → table (top to bottom)
-    schedule_content = mo.vstack([
+    _display_cols = [
+        "week",
+        "game_type",
+        "matchup",
+        "date_display",
+        "weekday",
+        "time_display",
+        "status",
+        "stadium",
+    ]
 
-        # Header section
-        mo.md(f"### {max_season} Season Schedule"),
-        mo.md("Game times shown in Eastern Time. Scores shown for completed games."),
-
-        # Dropdown filter — sits above the table
-        mo.hstack([
-            week_dropdown,
-            # Show a small count of how many games are displayed
-            mo.md(f"**{len(_filtered)} games**"),
-        ], align="center", gap=1),
-
-        mo.md("---"),
-
-        # The table itself — mo.ui.table() renders a Polars DataFrame
-        # as an interactive, sortable table.
-        # pagination=True adds page controls so it doesn't scroll forever.
-        mo.ui.table(
-            _filtered,
-            pagination=False,
-            show_column_summaries=False,
-            show_data_types=False,
-            selection=None
-        ),
-    ])
-
-    schedule_content
-    return
-
-
-@app.cell
-def _(pl, team_dropdown, teams_lf):
-    selected_team = team_dropdown.value
-    filtered_df = teams_lf.filter(pl.col("team_name") == selected_team).collect()
-
-    filtered_df
-    return
+    schedule_content = mo.vstack(
+        [
+            # Header section
+            mo.md(f"### {max_season} Season Schedule"),
+            mo.md("Game times shown in Eastern Time. Scores shown for completed games."),
+            # Dropdown filter — sits above the table
+            mo.hstack(
+                [
+                    week_dropdown,
+                    game_type_dropdown,
+                    team_dropdown,
+                    mo.md(f"**{len(_filtered)} games**"),
+                ],
+                align="center",
+                gap=1,
+            ),
+            mo.md("---"),
+            # The table itself — mo.ui.table() renders a Polars DataFrame
+            # as an interactive, sortable table.
+            # pagination=True adds page controls so it doesn't scroll forever.
+            mo.ui.table(
+                _filtered.select(_display_cols),  # type: ignore
+                pagination=False,
+                show_column_summaries=False,
+                show_data_types=False,
+                selection=None,
+            ),
+        ]
+    )
+    return (schedule_content,)
 
 
 if __name__ == "__main__":
