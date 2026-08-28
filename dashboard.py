@@ -32,21 +32,20 @@
 
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.24.0"
 app = marimo.App(width="medium", app_title="NFL Reporter")
 
 
 @app.cell
 def _(c, max_season, max_week, mo, teams_lf):
-    league_logo_src = teams_lf.select(c.team_league_logo).unique().collect().head(1).item()  # ty:ignore[unresolved-attribute]
-    leage_logo = mo.image(src=league_logo_src, width=60, alt="")
+    league_logo_src = teams_lf.select(c.team_league_logo).unique().collect().head(1).item()
+    leage_logo = mo.image(src=league_logo_src, width=50, alt="")
 
     title_stack = mo.hstack(
         [
             leage_logo,
             mo.md(f"""
-    ## NFL Reporter - {str(max_season)} Season
-    """),
+    ### NFL Reporter - {str(max_season)}"""),
         ],
         justify="start",
         align="center",
@@ -106,8 +105,8 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
             ]
         )
 
-    elif "Teams" in tabs.value:
-        # The Teams page will show per-team stats with a dropdown to
+    elif "My Team" in tabs.value:
+        # The My Team page will show per-team stats with a dropdown to
         # filter by team. For now we show the raw DataFrame as a table.
         #
         # .head(10) limits the table to the first 10 rows so the page
@@ -115,7 +114,7 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
         page_content = mo.vstack(
             [
                 mo.md("# 📊 Team Stats"),
-                mo.ui.table(team_stats_lf.head(10).collect()),  # ty:ignore[invalid-argument-type]
+                mo.ui.table(team_stats_lf.head(10).collect()),
             ]
         )
 
@@ -123,7 +122,7 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
         page_content = mo.vstack(
             [
                 mo.md("# 🏃 Player Stats"),
-                mo.ui.dataframe(player_stats_lf.head(10).collect()),  # ty:ignore[invalid-argument-type]
+                mo.ui.dataframe(player_stats_lf.head(10).collect()),
             ]
         )
 
@@ -131,7 +130,7 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
         page_content = mo.vstack(
             [
                 mo.md("# 🩹 Injury Report"),
-                mo.ui.table(injuries_lf.head(10).collect()),  # type: ignore
+                mo.ui.table(injuries_lf.head(10).collect()),
             ]
         )
 
@@ -145,9 +144,9 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
 @app.cell
 def _():
     import marimo as mo
+    import nflreadpy as nfl
     import polars as pl
     from polars import col as c
-    import nflreadpy as nfl
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -196,8 +195,8 @@ def _(team_dropdown):
 @app.cell
 def _(c, mo, schedules_lf, teams_lf):
     team_map = {
-        row[1]: row[0]   # full name → abbreviation
-        for row in teams_lf.select(["team_abbr", "team_name"]).sort("team_name").collect().rows() # type: ignore
+        row[1]: row[0]
+        for row in teams_lf.select(["team_abbr", "team_name"]).sort("team_name").collect().rows()
     }
 
     # Prepend "All Teams" as the default option
@@ -210,7 +209,7 @@ def _(c, mo, schedules_lf, teams_lf):
     )
 
     week_options = (
-        schedules_lf # type: ignore
+        schedules_lf
         .select("week")
         .unique()
         .sort("week")
@@ -228,9 +227,9 @@ def _(c, mo, schedules_lf, teams_lf):
     )
 
     game_types = (
-        schedules_lf # type: ignore
-        .select(c.game_type
-        .replace(
+        schedules_lf
+        .select(
+            c.game_type.replace(
                 {
                     "REG": "Regular Season",
                     "WC": "Wild Card",
@@ -238,20 +237,23 @@ def _(c, mo, schedules_lf, teams_lf):
                     "CON": "Conference Championship",
                     "SB": "Super Bowl",
                 }
-            )
-            .alias("game_type"))
+            ).alias("game_type")
+        )
+        .unique()
+        .sort("game_type")
         .collect()
         .to_series()
-        .to_list() 
+        .to_list()
     )
 
-    game_type_options = ["All"] + [f"{g}" for g in game_types]
+    game_type_options = ["All"] + game_types
 
     game_type_dropdown = mo.ui.dropdown(
         options=game_type_options,
         value="All",
-        label="Filter by Game Type"
+        label="Filter by Game Type",
     )
+
     return game_type_dropdown, team_dropdown, team_map, week_dropdown
 
 
