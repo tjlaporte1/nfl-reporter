@@ -35,9 +35,42 @@ import marimo
 __generated_with = "0.24.0"
 app = marimo.App(width="medium", app_title="NFL Reporter")
 
+with app.setup:
+    # Initialization code that runs before all other cells
+
+    import marimo as mo
+    import nflreadpy as nfl
+    import polars as pl
+    from polars import col as c
+
+    max_season = nfl.load_schedules().select(pl.col("season").max()).item()
+    stats_max_season = (
+        nfl.load_team_stats(summary_level="reg").select(pl.col("season").max()).item()
+    )
+
+    # Fetch last 4 seasons of stats
+    stats_seasons = list(range(stats_max_season - 3, stats_max_season + 1))
+
+    # LazyFrames
+    rosters_lf = nfl.load_rosters().lazy()
+    injuries_lf = nfl.load_injuries().lazy()
+    teams_lf = nfl.load_teams().lazy()
+    schedules_lf = nfl.load_schedules(seasons=max_season).lazy()
+    team_stats_lf = nfl.load_team_stats(seasons=stats_seasons).lazy()
+    player_stats_lf = nfl.load_player_stats(seasons=stats_seasons).lazy()
+
+    max_week = (
+        schedules_lf.filter(c.home_score.is_not_null())
+        .select(c.week.max())
+        .collect()
+        .item()
+    )
+
+    max_week = int(max_week) if max_week is not None else 0
+
 
 @app.cell
-def _(c, max_season, max_week, mo, teams_lf):
+def _():
     league_logo_src = teams_lf.select(c.team_league_logo).unique().collect().head(1).item()
     leage_logo = mo.image(src=league_logo_src, width=50, alt="")
 
@@ -95,7 +128,7 @@ def _(page_content):
 
 
 @app.cell
-def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
+def _(schedule_content, tabs):
     if "League" in tabs.value:
         # The League page will eventually show league-wide EPA trends,
         # standings, and win/loss summaries.
@@ -142,58 +175,13 @@ def _(injuries_lf, mo, player_stats_lf, schedule_content, tabs, team_stats_lf):
 
 
 @app.cell
-def _():
-    import marimo as mo
-    import nflreadpy as nfl
-    import polars as pl
-    from polars import col as c
-
-    max_season = nfl.load_schedules().select(pl.col("season").max()).item()
-    stats_max_season = (
-        nfl.load_team_stats(summary_level="reg").select(pl.col("season").max()).item()
-    )
-
-    # Fetch last 4 seasons of stats
-    stats_seasons = list(range(stats_max_season - 3, stats_max_season + 1))
-
-    # LazyFrames
-    rosters_lf = nfl.load_rosters().lazy()
-    injuries_lf = nfl.load_injuries().lazy()
-    teams_lf = nfl.load_teams().lazy()
-    schedules_lf = nfl.load_schedules(seasons=max_season).lazy()
-    team_stats_lf = nfl.load_team_stats(seasons=stats_seasons).lazy()
-    player_stats_lf = nfl.load_player_stats(seasons=stats_seasons).lazy()
-
-    max_week = (
-        schedules_lf.filter(c.home_score.is_not_null())
-        .select(c.week.max())
-        .collect()
-        .item()  # ty:ignore[unresolved-attribute]
-    )
-
-    max_week = int(max_week) if max_week is not None else 0
-    return (
-        c,
-        injuries_lf,
-        max_season,
-        max_week,
-        mo,
-        pl,
-        player_stats_lf,
-        schedules_lf,
-        team_stats_lf,
-        teams_lf,
-    )
-
-
-@app.cell
 def _(team_dropdown):
     team_dropdown
     return
 
 
 @app.cell
-def _(c, mo, schedules_lf, teams_lf):
+def _():
     team_map = {
         row[1]: row[0]
         for row in teams_lf.select(["team_abbr", "team_name"]).sort("team_name").collect().rows()
@@ -253,21 +241,11 @@ def _(c, mo, schedules_lf, teams_lf):
         value="All",
         label="Filter by Game Type",
     )
-
     return game_type_dropdown, team_dropdown, team_map, week_dropdown
 
 
 @app.cell
-def _(
-    game_type_dropdown,
-    max_season,
-    mo,
-    pl,
-    schedules_lf,
-    team_dropdown,
-    team_map,
-    week_dropdown,
-):
+def _(game_type_dropdown, team_dropdown, team_map, week_dropdown):
     _lf = (
         schedules_lf.select(
             [
