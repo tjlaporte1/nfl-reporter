@@ -32,7 +32,7 @@
 
 import marimo
 
-__generated_with = "0.24.0"
+__generated_with = "0.24.2"
 app = marimo.App(width="medium", app_title="NFL Reporter")
 
 with app.setup:
@@ -42,6 +42,8 @@ with app.setup:
     import nflreadpy as nfl
     import polars as pl
     from polars import col as c
+
+    import rank_functions as rk_fn
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -55,7 +57,7 @@ with app.setup:
     rosters_lf = nfl.load_rosters().lazy()
     injuries_lf = nfl.load_injuries().lazy()
     teams_lf = nfl.load_teams().lazy()
-    schedules_lf = nfl.load_schedules(seasons=max_season).lazy()
+    schedules_lf = nfl.load_schedules(seasons=stats_seasons).lazy()
     team_stats_lf = nfl.load_team_stats(seasons=stats_seasons).lazy()
     player_stats_lf = nfl.load_player_stats(seasons=stats_seasons).lazy()
 
@@ -67,6 +69,12 @@ with app.setup:
     )
 
     max_week = int(max_week) if max_week is not None else 0
+
+
+@app.cell
+def _():
+    rank_lf = rk_fn.build_ranked_grades(schedules_lf, team_stats_lf)
+    return
 
 
 @app.cell
