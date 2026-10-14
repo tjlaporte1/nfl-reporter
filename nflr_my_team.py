@@ -101,8 +101,6 @@ def _build_radar(row, axes, units):
                 fillcolor=wedge_color,
                 line={"width": 0},
                 name=name,
-                legendgroup=name,
-                showlegend=name not in seen,
                 hoverinfo="skip",
             )
         )
@@ -140,6 +138,7 @@ def _build_radar(row, axes, units):
 
     fig.update_layout(
         title=f"{row['team_name']}: Week {row['week']}",
+        showlegend=False,
         polar={
             # reversed: rank 1 on the outer edge; hide the rank numbers and axis line
             "radialaxis": {"range": [32, 1], "showticklabels": False, "showline": False},
