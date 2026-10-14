@@ -550,4 +550,15 @@ def get_weekly_records(schedules_lf: pl.LazyFrame) -> pl.LazyFrame:
         ]
     )
 
+    records_lf = records_lf.with_columns(
+        pl.when(c.cumulative_ties > 0)
+        .then(
+            pl.format(
+                "{}-{}-{}", c.cumulative_wins, c.cumulative_losses, c.cumulative_ties
+            )
+        )
+        .otherwise(pl.format("{}-{}", c.cumulative_wins, c.cumulative_losses))
+        .alias("record")
+    )
+
     return records_lf.sort(["team", "week"])

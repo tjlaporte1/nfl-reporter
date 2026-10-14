@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.2"
+__generated_with = "0.25.1"
 app = marimo.App()
 
 
@@ -13,7 +13,7 @@ def _():
     import plotly.graph_objects as go
     from polars import col as c
 
-    import rank_functions as rk_fn
+    import functions.rank_functions as rk_fn
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -39,17 +39,7 @@ def _():
     )
 
     max_week = int(max_week) if max_week is not None else 0
-    return (
-        c,
-        go,
-        max_week,
-        mo,
-        pl,
-        rk_fn,
-        schedules_lf,
-        team_stats_lf,
-        teams_lf,
-    )
+    return c, go, mo, pl, rk_fn, schedules_lf, team_stats_lf, teams_lf
 
 
 @app.cell
@@ -68,6 +58,12 @@ def _(c, rank_lf):
 def _(rk_fn, schedules_lf):
     records_lf = rk_fn.get_weekly_records(schedules_lf)
     return (records_lf,)
+
+
+@app.cell
+def _(records_lf):
+    records_lf
+    return
 
 
 @app.cell
@@ -99,6 +95,7 @@ def _(full_lf, pl):
         "cumulative_wins",
         "cumulative_losses",
         "cumulative_ties",
+        "record",
         # team info (names, conference, colors, logos)
         "team_name",
         "team_nick",
@@ -130,44 +127,60 @@ def _(team_weekly_lf):
 
 @app.cell
 def _(go):
-    # ---- cell 3: axes + radar builder ----
-    # label on chart -> rank column. Spokes go clockwise from just right of the top:
-    # offense (top right), FG / SOS / Punting (bottom), defense (top left).
-    AXES = {
+    # ---- cell 3: axes, wedges and radar builder ----
+    # --- detailed view: label on chart -> rank column (spokes go clockwise from just right of the top)
+    DETAILED_AXES = {
         "Passing": "passing_rank",
         "Rushing": "rushing_rank",
         "TDs": "td_rank",
-        "FG Unit": "fg_rank",
+        "FG value": "fg_rank",
+        "Punting": "punting_rank",
         "SOS": "sos_rank",
-        "Punting Unit": "punting_rank",
         "Disruption": "disruption_rank",
         "Rush defense": "rush_defense_rank",
         "Pass defense": "pass_defense_rank",
     }
-
-    # Background wedges in the same clockwise order: (name, color, number of spokes it covers).
-    # Counts must add up to len(AXES). The last number in each rgba(...) is the opacity.
-    UNITS = [
+    # background wedges in the same clockwise order: (name, color, number of spokes it covers)
+    DETAILED_UNITS = [
         ("Offense", "rgba(44,160,44,0.07)", 3),
-        ("Special teams", "rgba(31,119,180,0.07)", 1),  # FG value
+        ("Special teams", "rgba(31,119,180,0.07)", 2),  # FG value
         ("Strength of schedule", "rgba(128,128,128,0.10)", 1),  # SOS
-        ("Special teams", "rgba(31,119,180,0.07)", 1),  # Punting
         ("Defense", "rgba(214,39,40,0.07)", 3),
     ]
 
+    # --- overview view: the four high-level ranks, one per quadrant
+    OVERVIEW_AXES = {
+        "Offense": "offense_rank",
+        "Special teams": "special_teams_rank",
+        "SOS": "sos_rank",
+        "Defense": "defense_rank",
+    }
+    OVERVIEW_UNITS = [
+        ("Offense", "rgba(44,160,44,0.07)", 1),
+        ("Special teams", "rgba(31,119,180,0.07)", 1),
+        ("Strength of schedule", "rgba(128,128,128,0.10)", 1),
+        ("Defense", "rgba(214,39,40,0.07)", 1),
+    ]
 
-    def build_radar(row):
-        """row = one team's graded row for one week (a dict)."""
-        step = 360 / len(AXES)  # degrees per spoke (40 for 9 spokes)
-        angles = [(i + 0.5) * step for i in range(len(AXES))]  # half-step offset puts SOS at the bottom
-        ranks = [row[col] for col in AXES.values()]  # can contain None if a stat is missing
+    # toggle label -> (axes, wedges). Wedge counts must add up to the number of axes.
+    VIEWS = {
+        "Overview": (OVERVIEW_AXES, OVERVIEW_UNITS),
+        "Detailed": (DETAILED_AXES, DETAILED_UNITS),
+    }
+
+
+    def build_radar(row, axes, units):
+        """row = one team's graded row for one week (a dict); axes/units = one entry of VIEWS."""
+        step = 360 / len(axes)  # degrees per spoke
+        angles = [(i + 0.5) * step for i in range(len(axes))]  # half-step offset keeps spokes off the top/bottom lines
+        ranks = [row[col] for col in axes.values()]  # can contain None if a stat is missing
         color = row["team_color"]
 
         fig = go.Figure()
 
         # 1) background wedges: centre -> arc along the outer edge -> back to centre
         first, seen = 0, set()
-        for name, wedge_color, n in UNITS:
+        for name, wedge_color, n in units:
             start, end = first * step, (first + n) * step  # wedge edges sit halfway between spokes
             arc = [(start + i * (end - start) / 20) % 360 for i in range(21)]
             fig.add_trace(go.Scatterpolar(
@@ -185,11 +198,11 @@ def _(go):
             line=dict(color=color, width=2), fillcolor=color, hoverinfo="skip",
         ))
 
-        # 3) the rank dots: a separate trace so they stay fully solid (not see-through like the fill)
+        # 3) the rank dots: a separate trace so they stay fully solid
         fig.add_trace(go.Scatterpolar(
-            r=ranks, theta=angles, text=list(AXES),
+            r=ranks, theta=angles, text=list(axes),
             mode="markers", showlegend=False,
-            marker=dict(size=9, color=color, line=dict(color="white", width=2)),
+            marker=dict(size=14, color=color, line=dict(color="white", width=3)),
             hovertemplate="%{text}: #%{r}<extra></extra>",
         ))
 
@@ -200,19 +213,19 @@ def _(go):
                 radialaxis=dict(range=[32, 1], showticklabels=False, showline=False),
                 angularaxis=dict(
                     rotation=90, direction="clockwise",
-                    tickmode="array", tickvals=angles, ticktext=list(AXES),
+                    tickmode="array", tickvals=angles, ticktext=list(axes),
                 ),
             ),
             height=600,
         )
         return fig
 
-    return (build_radar,)
+    return VIEWS, build_radar
 
 
 @app.cell
 def _(c, mo, team_weekly_lf):
-    # ---- cell 4: season + team dropdowns (create only, don't read .value here) ----
+    # ---- cell 4: season + team dropdowns and the view toggle (create only, don't read .value here) ----
     # Keep only weeks that have been graded. The table also has rows for unplayed
     # future games, and those have empty ranks.
     played_lf = team_weekly_lf.filter(c.offense_rank.is_not_null())
@@ -224,34 +237,44 @@ def _(c, mo, team_weekly_lf):
         options=[str(s) for s in season_options], value=str(season_options[-1]), label="Season"
     )
     team_dd = mo.ui.dropdown(options=team_options, value=team_options[0], label="Team")
-    return played_lf, season_dd, team_dd
+    view_radio = mo.ui.radio(options=["Overview", "Detailed"], value="Overview", inline=True, label="View")
+    latest_week = played_lf.filter(c.season == season_options[-1]).select(c.week.max()).collect().item()
+    week_slider = mo.ui.slider(start=1, stop=18, value=latest_week, label="Week", show_value=True)
+    return played_lf, season_dd, team_dd, view_radio, week_slider
 
 
 @app.cell
-def _(c, max_week, mo, played_lf, season_dd, team_dd):
+def _(c, played_lf, season_dd, team_dd):
     # ---- cell 5: that team's season + the week slider (create the slider here, don't read its .value) ----
     team_df = (
         played_lf.filter(c.season == int(season_dd.value), c.team == team_dd.value)
         .sort("week")
         .collect()
     )
-    weeks = team_df["week"].to_list()  # only graded weeks the team played
-
-    # default to max_week, or the closest earlier week this team played (e.g. if they had a bye)
-    default_week = max((w for w in weeks if w <= max_week), default=weeks[0])
-
-    week_slider = mo.ui.slider(steps=weeks, value=default_week, label="Week", show_value=True)
-    return team_df, week_slider
+    return (team_df,)
 
 
 @app.cell
-def _(build_radar, c, mo, season_dd, team_dd, team_df, week_slider):
-    # ---- cell 6: display (reads week_slider.value, so it must be its own cell) ----
-    selected_row = team_df.filter(c.week == week_slider.value).row(0, named=True)
+def _(
+    VIEWS,
+    build_radar,
+    c,
+    mo,
+    season_dd,
+    team_dd,
+    team_df,
+    view_radio,
+    week_slider,
+):
+    # ---- cell 6: display ----
+    weeks = team_df["week"].to_list()  # graded weeks this team played
+    week = max((w for w in weeks if w <= week_slider.value), default=weeks[0])  # closest earlier week
+    selected_row = team_df.filter(c.week == week).row(0, named=True)
+    axes, units = VIEWS[view_radio.value]
 
     mo.vstack([
-        mo.hstack([season_dd, team_dd, week_slider], justify="start"),
-        build_radar(selected_row),
+        mo.hstack([season_dd, team_dd, week_slider, view_radio], justify="start"),
+        build_radar(selected_row, axes, units),
     ])
     return
 
