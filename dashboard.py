@@ -42,9 +42,9 @@ with app.setup:
     import nflreadpy as nfl
     import polars as pl
     from polars import col as c
-
-    from functions import rank_functions as rk_fn
-    from pages import my_team, schedule
+    import rank_functions as rk_fn
+    import nflr_schedule
+    import nflr_my_team
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -130,14 +130,14 @@ def _():
 @app.cell
 def _(team_weekly_lf):
     # Heavy work lives in pages/schedule.py. Called once; does not depend on filters.
-    schedules_display = schedule.build_data(schedules_lf, team_weekly_lf, max_season)
+    schedules_display = nflr_schedule.build_data(schedules_lf, team_weekly_lf, max_season)
     return (schedules_display,)
 
 
 @app.cell
 def _(team_weekly_lf):
     # My Team page data: every graded team-week, collected once.
-    graded_df = my_team.build_data(team_weekly_lf)
+    graded_df = nflr_my_team.build_data(team_weekly_lf)
     return (graded_df,)
 
 
@@ -145,8 +145,8 @@ def _(team_weekly_lf):
 def _(graded_df):
     # My Team page widgets. Each gets its own cell so it is created once and
     # keeps its state when other things change.
-    team_view = my_team.make_view_selector()
-    team_season = my_team.make_season_selector(graded_df)
+    team_view = nflr_my_team.make_view_selector()
+    team_season = nflr_my_team.make_season_selector(graded_df)
     return team_season, team_view
 
 
@@ -154,7 +154,7 @@ def _(graded_df):
 def _(graded_df, team_season):
     # Built from the chosen season, so it is rebuilt (and jumps to that
     # season's latest week) whenever the season changes.
-    team_week_slider = my_team.make_week_slider(graded_df, team_season.value)
+    team_week_slider = nflr_my_team.make_week_slider(graded_df, team_season.value)
     return (team_week_slider,)
 
 
@@ -267,7 +267,7 @@ def _(team_dropdown, team_map, week_dropdown):
 @app.cell
 def _(schedules_display, selected_team_abbr, selected_week_num):
     # Re-runs whenever a filter changes. Cheap: it only filters and draws.
-    schedule_content = schedule.render(
+    schedule_content = nflr_schedule.render(
         schedules_display, max_season, selected_week_num, selected_team_abbr
     )
     return (schedule_content,)
@@ -276,7 +276,7 @@ def _(schedules_display, selected_team_abbr, selected_week_num):
 @app.cell
 def _(graded_df, selected_team_abbr, team_season, team_view, team_week_slider):
     # Re-runs when the team (sidebar), season, week slider or view toggle changes.
-    my_team_content = my_team.render(
+    my_team_content = nflr_my_team.render(
         graded_df, selected_team_abbr, team_season, team_week_slider, team_view
     )
     return (my_team_content,)

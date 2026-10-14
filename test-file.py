@@ -13,7 +13,7 @@ def _():
     import plotly.graph_objects as go
     from polars import col as c
 
-    import functions.rank_functions as rk_fn
+    import rank_functions as rk_fn
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (

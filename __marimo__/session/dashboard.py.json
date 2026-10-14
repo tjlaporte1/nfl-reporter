@@ -1,0 +1,185 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.25.1",
+    "script_metadata_hash": "a4e479da9d5bd0a8a0bc4509839246d6"
+  },
+  "cells": [
+    {
+      "id": "setup",
+      "code_hash": "73fea8db9c242aab1e22a78290800297",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='setup-0' random-id='864694ff-93e0-a6ee-3766-326b4805a1ad'><marimo-anywidget data-initial-value='{&quot;model_id&quot;:&quot;22f7f079e11c4cfea5cf126c255960b9&quot;}' data-label='null' data-model-id='&quot;22f7f079e11c4cfea5cf126c255960b9&quot;'></marimo-anywidget></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "e821bcba-5e92-4b7a-8454-188648b21c85",
+      "code_hash": "9a4a25a966fbda3a8605ac1cbc45da8a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "7218e29a-2fc7-478d-b05b-bf54de9126ce",
+      "code_hash": "2744d47d310e107655940c49be7837a3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/Users/tomlaporte/vscode/nfl-reporter/nflr_schedule.py:234: UserWarning: Sortedness of columns cannot be checked when 'by' groups provided\n  ).collect()\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "3a2f00d3-6b46-4fa7-a0fd-8133fe08ee6f",
+      "code_hash": "efece253056a3ed12fe2168ccabaa0e7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "3b003400-9801-4510-ac8b-4ad72c72320a",
+      "code_hash": "9e74b24e74807740cdf69b615659b64d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "78bf1b2b-f9b5-45e4-bff4-c16c24a5d741",
+      "code_hash": "247f155f27c3deec1e8f433bbd474ed9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "baeb98c4-42c6-4f14-9030-677d23cf5d6a",
+      "code_hash": "99020c6baa9e9182f9bc00cfb6968896",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: space-between;align-items: center;flex-wrap: nowrap;gap: 0.5rem'><div style='display: flex;flex: 1;flex-direction: row;justify-content: flex-start;align-items: center;flex-wrap: nowrap;gap: 1rem'><img src='https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/NFL.png' style='width: 50px' /><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>NFL Reporter - 2026</strong></span></span><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><em>v0.1</em></span></span></div><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><em>Week 6</em></span></span></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "4dcaca46-f667-49a5-ac44-696fd5f61a9d",
+      "code_hash": "c5371e0da2e7e3f51ec21aaf3895e420",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "7e33af00-dd7e-439f-8879-92a50e51aa1b",
+      "code_hash": "79d7e02c8a92cd519583164143b23b01",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-sidebar ><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"navigation\">Navigation</h2></span><marimo-ui-element object-id='7e33af00-dd7e-439f-8879-92a50e51aa1b-0' random-id='90e8776a-bb86-b802-0b99-d9937c38bfb2'><marimo-radio data-initial-value='&quot;Schedules&quot;' data-label='null' data-options='[&quot;Schedules&quot;,&quot;My Team&quot;,&quot;Matchups&quot;,&quot;Players&quot;]' data-inline='false' data-disabled='false'></marimo-radio></marimo-ui-element><span class=\"markdown prose dark:prose-invert contents\"><hr /></span><span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"filters\">Filters</h3></span><marimo-ui-element object-id='7e33af00-dd7e-439f-8879-92a50e51aa1b-1' random-id='a4d4115f-a8cb-70f4-f46b-585014b69681'><marimo-dropdown data-initial-value='[&quot;Week 6&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eWeek&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;All Weeks&quot;,&quot;Week 1&quot;,&quot;Week 2&quot;,&quot;Week 3&quot;,&quot;Week 4&quot;,&quot;Week 5&quot;,&quot;Week 6&quot;,&quot;Week 7&quot;,&quot;Week 8&quot;,&quot;Week 9&quot;,&quot;Week 10&quot;,&quot;Week 11&quot;,&quot;Week 12&quot;,&quot;Week 13&quot;,&quot;Week 14&quot;,&quot;Week 15&quot;,&quot;Week 16&quot;,&quot;Week 17&quot;,&quot;Week 18&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='7e33af00-dd7e-439f-8879-92a50e51aa1b-2' random-id='4b2683a4-f092-e633-869f-a73d2d4554ed'><marimo-dropdown data-initial-value='[&quot;All Teams&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eTeam&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;All Teams&quot;,&quot;Arizona Cardinals&quot;,&quot;Atlanta Falcons&quot;,&quot;Baltimore Ravens&quot;,&quot;Buffalo Bills&quot;,&quot;Carolina Panthers&quot;,&quot;Chicago Bears&quot;,&quot;Cincinnati Bengals&quot;,&quot;Cleveland Browns&quot;,&quot;Dallas Cowboys&quot;,&quot;Denver Broncos&quot;,&quot;Detroit Lions&quot;,&quot;Green Bay Packers&quot;,&quot;Houston Texans&quot;,&quot;Indianapolis Colts&quot;,&quot;Jacksonville Jaguars&quot;,&quot;Kansas City Chiefs&quot;,&quot;Las Vegas Raiders&quot;,&quot;Los Angeles Chargers&quot;,&quot;Los Angeles Rams&quot;,&quot;Miami Dolphins&quot;,&quot;Minnesota Vikings&quot;,&quot;New England Patriots&quot;,&quot;New Orleans Saints&quot;,&quot;New York Giants&quot;,&quot;New York Jets&quot;,&quot;Oakland Raiders&quot;,&quot;Philadelphia Eagles&quot;,&quot;Pittsburgh Steelers&quot;,&quot;San Diego Chargers&quot;,&quot;San Francisco 49ers&quot;,&quot;Seattle Seahawks&quot;,&quot;St. Louis Rams&quot;,&quot;Tampa Bay Buccaneers&quot;,&quot;Tennessee Titans&quot;,&quot;Washington Commanders&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element></div></marimo-sidebar>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ed43f2a7-7406-40a6-bb53-cc5316ff569b",
+      "code_hash": "9e1054b0078bd9fc8a8a35ee55828d65",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "edcd235b-09c6-41c9-85b0-c64f161ea63a",
+      "code_hash": "5a227d153e626cab5fb4123fed21ea02",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "7d9596bb-d5d0-4740-93a7-c9d6b45d48f7",
+      "code_hash": "fe2ed90125f6461ff8ac99c35de3b803",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "92c97d7a-62d4-44a0-adf9-38f14f48b5d9",
+      "code_hash": "42d17e8e3ce19350eeab20a271753a0c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"2026-season-schedule\">2026 Season Schedule</h3></span><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Game times shown in Eastern Time.</span></span><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>14 games</strong> \u00b7 \u2605 0 top-10 matchups</span></span><span class=\"markdown prose dark:prose-invert contents\"><hr /></span><marimo-ui-element object-id='edcd235b-09c6-41c9-85b0-c64f161ea63a-0' random-id='e274674e-2c9e-1aca-772c-c5f418f1c882'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#4 SEA (3-2) @ #24 DEN (3-2)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 15, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Thursday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;8:15 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Empower Field at Mile High&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#14 HOU (1-4) @ #6 JAX (4-1)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;9:30 AM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Wembley Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#21 CHI (3-2) @ #5 ATL (2-3)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Mercedes-Benz Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#28 TEN (0-5) @ #30 IND (2-3)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Lucas Oil Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#3 BAL (4-1) @ #19 CLE (3-2)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Huntington Bank Field&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#13 NYJ (2-3) @ #9 NE (3-2)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Gillette Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#14 CAR (2-2) @ #20 PHI (2-3)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Lincoln Financial Field&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#16 PIT (3-2) @ #10 TB (1-4)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;Raymond James Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#26 NO (1-4) @ #27 NYG (3-1-1)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;1:00 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;MetLife Stadium&#92;&quot;},{&#92;&quot;Week&#92;&quot;:6,&#92;&quot;Matchup&#92;&quot;:&#92;&quot;#29 ARI (1-4) @ #8 LA (2-3)&#92;&quot;,&#92;&quot;Result&#92;&quot;:&#92;&quot;Upcoming&#92;&quot;,&#92;&quot;Date&#92;&quot;:&#92;&quot;Oct 18, 2026&#92;&quot;,&#92;&quot;Weekday&#92;&quot;:&#92;&quot;Sunday&#92;&quot;,&#92;&quot;Time&#92;&quot;:&#92;&quot;4:05 PM ET&#92;&quot;,&#92;&quot;Stadium&#92;&quot;:&#92;&quot;SoFi Stadium&#92;&quot;}]&quot;' data-total-rows='14' data-total-columns='7' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-show-filters='false' data-show-download='true' data-show-search='true' data-show-column-summaries='false' data-show-data-types='false' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='false' data-cell-styles='{&quot;0&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;1&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;2&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;3&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;4&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;5&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;6&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;7&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;8&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}},&quot;9&quot;:{&quot;Week&quot;:{},&quot;Matchup&quot;:{},&quot;Result&quot;:{},&quot;Date&quot;:{},&quot;Weekday&quot;:{},&quot;Time&quot;:{},&quot;Stadium&quot;:{}}}' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
