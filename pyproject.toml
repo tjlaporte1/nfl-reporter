@@ -10,3 +10,6 @@ dependencies = [
     "numpy>=2.5.3",
     "plotly>=7.1.0",
 ]
+
+[tool.marimo.runtime]
+pythonpath = ["functions", "pages"]
