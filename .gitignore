@@ -11,3 +11,4 @@ wheels/
 .venv
 
 __marimo__/
+/.kanbn

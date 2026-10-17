@@ -92,9 +92,8 @@ def build_data(schedules_lf, team_weekly_lf, season):
     # pl.col("rank") is used because "rank" is also a Polars method name.
     ranks_lf = (
         team_weekly_lf.filter((c.season == season) & pl.col("rank").is_not_null())
-        .sort("week")
-        .group_by("team")
-        .agg(pl.col("rank").last().cast(pl.Int64).alias("rank"))
+        .select("team", c.week.cast(pl.Int64), pl.col("rank").cast(pl.Int64))
+        .sort("week")  # join_asof needs this sorted by week
     )
 
     # Each team's running record after every week it played
@@ -157,16 +156,20 @@ def build_data(schedules_lf, team_weekly_lf, season):
             strategy="backward",
             allow_exact_matches=False,
         )
-        # Ranks (regular joins; the sort below restores the order)
-        .join(
+        # Ranks going INTO the game: latest graded rank from an earlier week
+        .join_asof(
             ranks_lf.rename({"team": "away_team", "rank": "away_rank"}),
-            on="away_team",
-            how="left",
+            on="week",
+            by="away_team",
+            strategy="backward",
+            allow_exact_matches=False,
         )
-        .join(
+        .join_asof(
             ranks_lf.rename({"team": "home_team", "rank": "home_rank"}),
-            on="home_team",
-            how="left",
+            on="week",
+            by="home_team",
+            strategy="backward",
+            allow_exact_matches=False,
         )
         .sort(["week", "gameday", "gametime"])
         # Step A: simple new columns that Step B will use
@@ -174,7 +177,9 @@ def build_data(schedules_lf, team_weekly_lf, season):
             _record_label("away").alias("away_record"),
             _record_label("home").alias("home_record"),
             # True when both teams are ranked in the top 10 (nulls become False)
-            ((c.away_rank <= 10) & (c.home_rank <= 10)).fill_null(False).alias("top_10"),
+            ((c.away_rank <= 10) & (c.home_rank <= 10))
+            .fill_null(False)
+            .alias("top_10"),
             pl.col("game_type").replace(_GAME_TYPE_NAMES).alias("game_type"),
         )
         # Step B: display columns built from Step A's columns
@@ -270,12 +275,11 @@ def render(schedule_df, season, week_num=None, team_abbr=None):
     return mo.vstack(
         [
             mo.md(f"### {season} Season Schedule"),
-            mo.md("Game times shown in Eastern Time."),
             mo.md(f"**{len(filtered)} games** · ★ {top_10_games} top-10 matchups"),
             mo.md("---"),
             mo.ui.table(
                 table_df.to_dicts(),  # drop .to_dicts() if the normal viewer works for you
-                pagination=True,
+                pagination=False,
                 show_column_summaries=False,
                 show_data_types=False,
                 selection=None,

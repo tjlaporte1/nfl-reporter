@@ -264,6 +264,14 @@ def compute_component_scores(zscored_lf: pl.LazyFrame) -> pl.LazyFrame:
     This calculates the weighted aggregate metrics used to rank team strength
     by phase of play.
     """
+
+    # No kicks/punts yet means no evidence, so treat as league average (z = 0)
+    zscored_lf = zscored_lf.with_columns(
+        c.z_fg_value.fill_null(0.0),
+        c.z_net_ypp.fill_null(0.0),
+        c.z_inside_20_rate.fill_null(0.0),
+    )
+    
     return zscored_lf.with_columns(
         (c.z_pass_ypa * 0.40 + c.z_rush_ypc * 0.40 + c.z_td_rate * 0.20).alias(
             "offense_score"
