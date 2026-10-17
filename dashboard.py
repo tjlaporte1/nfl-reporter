@@ -42,9 +42,10 @@ with app.setup:
     import nflreadpy as nfl
     import polars as pl
     from polars import col as c
-    import rank_functions as rk_fn
-    import nflr_schedule
+
     import nflr_my_team
+    import nflr_schedule
+    import rank_functions as rk_fn
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -78,6 +79,23 @@ with app.setup:
         )
 
     max_week = int(max_week) if max_week is not None else 0
+
+     # Old abbreviation -> current abbreviation (relocated franchises)
+    ABBR_FIX = {"OAK": "LV", "SD": "LAC", "STL": "LA"}
+
+    teams_lf = nfl.load_teams().lazy().filter(~c.team_abbr.is_in(list(ABBR_FIX)))
+
+    schedules_lf = (
+            nfl.load_schedules(seasons=stats_seasons)
+            .lazy()
+            .with_columns(c.home_team.replace(ABBR_FIX), c.away_team.replace(ABBR_FIX))
+        )
+    
+    team_stats_lf = (
+            nfl.load_team_stats(seasons=stats_seasons)
+            .lazy()
+            .with_columns(c.team.replace(ABBR_FIX), c.opponent_team.replace(ABBR_FIX))
+        )
 
 
 @app.cell
@@ -147,7 +165,8 @@ def _(graded_df):
     # keeps its state when other things change.
     team_view = nflr_my_team.make_view_selector()
     team_season = nflr_my_team.make_season_selector(graded_df)
-    return team_season, team_view
+    team_compare = nflr_my_team.make_compare_selector()
+    return team_compare, team_season, team_view
 
 
 @app.cell
@@ -169,7 +188,7 @@ def _():
                 [
                     mo.image(src=league_logo_src, width=50, alt=""),
                     mo.md(f"**NFL Reporter - {max_season}**"),
-                    mo.md("_v0.1_"),
+                    mo.md("_v0.2_"),
                 ],
                 justify="start",
                 align="center",
@@ -274,11 +293,18 @@ def _(schedules_display, selected_team_abbr, selected_week_num):
 
 
 @app.cell
-def _(graded_df, selected_team_abbr, team_season, team_view, team_week_slider):
+def _(
+    graded_df,
+    selected_team_abbr,
+    team_compare,
+    team_season,
+    team_view,
+    team_week_slider,
+):
     # Re-runs when the team (sidebar), season, week slider or view toggle changes.
     my_team_content = nflr_my_team.render(
-        graded_df, selected_team_abbr, team_season, team_week_slider, team_view
-    )
+            graded_df, selected_team_abbr, team_season, team_week_slider, team_view, team_compare
+        )
     return (my_team_content,)
 
 

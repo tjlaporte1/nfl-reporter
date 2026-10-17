@@ -71,10 +71,102 @@ VIEWS = {
     "Detailed": (DETAILED_AXES, DETAILED_UNITS),
 }
 
+# Options for the rank-over-time chart: which other teams to draw
+COMPARE_SCOPES = ["Team only", "Division", "Conference"]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# The radar chart builder (private: only used inside this file)
+# Chart builders
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+def _build_rank_line(season_df, team_abbr, scope, through_week):
+    """Line chart of overall rank by week, drawn up to `through_week`.
+
+    season_df    -- graded rows for ONE season (all teams)
+    team_abbr    -- the selected team, e.g. "PHI"
+    scope        -- one of COMPARE_SCOPES
+    through_week -- last week to draw (from the week slider)
+    """
+    last_week = season_df["week"].max()  # latest graded week, used to fix the x axis
+    visible = season_df.filter(c.week <= through_week)  # only the weeks to draw
+
+    me = visible.filter(c.team == team_abbr).sort("week")
+    first = me.row(0, named=True)
+
+    # Decide which teams to draw. Every row carries team_division and team_conf,
+    # so a filter on the selected team's value finds its division or conference.
+    if scope == "Division":
+        shown = visible.filter(c.team_division == first["team_division"])
+    elif scope == "Conference":
+        shown = visible.filter(c.team_conf == first["team_conf"])
+    else:
+        shown = me
+
+    others = shown.filter(c.team != team_abbr)
+    hover = "%{fullData.name}, Week %{x}: #%{y}<extra></extra>"
+    ranks = me["rank"].to_list()
+
+    fig = go.Figure()
+
+    # 1) Other teams first, so the selected team is drawn on top of them.
+    # partition_by("team") splits the table into a list of small tables,
+    # one per team, which is what we need to draw one line per team.
+    for group in others.sort("week").partition_by("team", maintain_order=True):
+        row = group.row(0, named=True)
+        fig.add_trace(
+            go.Scatter(
+                x=group["week"].to_list(),
+                y=group["rank"].to_list(),
+                mode="lines",
+                name=row["team"],
+                line={"color": row["team_color"], "width": 1.5},
+                opacity=0.5,
+                hovertemplate=hover,
+            )
+        )
+
+    # 2) The selected team last: thicker, solid, with dots
+    fig.add_trace(
+        go.Scatter(
+            x=me["week"].to_list(),
+            y=ranks,
+            mode="lines+markers+text",  # "+text" turns the labels on
+            text=[f"#{r}" for r in ranks],  # "#3", "#7", ... same order as x and y
+            textposition="top center",
+            textfont={"size": 12, "color": first["team_color"]},
+            cliponaxis=False,  # let a label near the plot edge draw outside the axes
+            name=team_abbr,
+            line={"color": first["team_color"], "width": 4},
+            marker={"size": 8},
+            hovertemplate=hover,
+        )
+    )
+
+    fig.update_layout(
+        title=f"Overall rank by week: {first['team_name']}",
+        height=450,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        showlegend=scope != "Team only",
+        xaxis={
+            "title": "Week",
+            "dtick": 1,
+            "range": [0.5, last_week + 0.5],
+            "showgrid": True,
+            "gridcolor": "rgba(0,0,0,0.08)",  # very light gray
+            "ticks": "outside",  # small hash marks on the axis
+        },
+        yaxis={
+            "title": "Overall rank",
+            "range": [32.5, 0.5],
+            "tickmode": "array",
+            "tickvals": [1, 4, 8, 12, 16, 20, 24, 28, 32],
+            "showgrid": True,
+            "gridcolor": "rgba(0,0,0,0.08)",
+            "ticks": "outside",
+        },
+    )
+    return fig
 
 
 def _build_radar(row, axes, units):
@@ -90,7 +182,10 @@ def _build_radar(row, axes, units):
     # 1) background wedges: centre -> arc along the outer edge -> back to centre
     first, seen = 0, set()
     for name, wedge_color, n in units:
-        start, end = first * step, (first + n) * step  # edges sit halfway between spokes
+        start, end = (
+            first * step,
+            (first + n) * step,
+        )  # edges sit halfway between spokes
         arc = [(start + i * (end - start) / 20) % 360 for i in range(21)]
         fig.add_trace(
             go.Scatterpolar(
@@ -141,7 +236,11 @@ def _build_radar(row, axes, units):
         showlegend=False,
         polar={
             # reversed: rank 1 on the outer edge; hide the rank numbers and axis line
-            "radialaxis": {"range": [32, 1], "showticklabels": False, "showline": False},
+            "radialaxis": {
+                "range": [32, 1],
+                "showticklabels": False,
+                "showline": False,
+            },
             "angularaxis": {
                 "rotation": 90,
                 "direction": "clockwise",
@@ -204,6 +303,16 @@ def make_week_slider(graded_df, season):
     )
 
 
+def make_compare_selector():
+    """The 'Compare with' toggle for the rank-over-time chart."""
+    return mo.ui.radio(
+        options=COMPARE_SCOPES,
+        value="Team only",
+        inline=False,
+        label="Compare with",
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Function 2: build the data (call once)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -223,13 +332,16 @@ def build_data(team_weekly_lf):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def render(graded_df, team_abbr, season_selector, week_slider, view_selector):
+def render(
+    graded_df, team_abbr, season_selector, week_slider, view_selector, compare_selector
+):
     """Return the finished page.
 
     team_abbr       -- an abbreviation like "PHI", or None (no team picked yet)
     season_selector -- the dropdown created by make_season_selector()
     week_slider     -- the slider created by make_week_slider()
     view_selector   -- the toggle created by make_view_selector()
+    compare_selector -- the toggle created by make_compare_selector()
     """
     season = season_selector.value  # e.g. 2026
 
@@ -239,9 +351,9 @@ def render(graded_df, team_abbr, season_selector, week_slider, view_selector):
     if season is None:
         return mo.md("_No graded weeks yet._")
 
-    team_df = graded_df.filter(
-        (c.season == season) & (c.team == team_abbr)
-    ).sort("week")
+    team_df = graded_df.filter((c.season == season) & (c.team == team_abbr)).sort(
+        "week"
+    )
 
     if team_df.is_empty():
         return mo.md(f"_No graded weeks for {team_abbr} in {season}._")
@@ -253,12 +365,14 @@ def render(graded_df, team_abbr, season_selector, week_slider, view_selector):
     selected_row = team_df.filter(c.week == week).row(0, named=True)
     axes, units = VIEWS[view_selector.value]
 
+    season_df = graded_df.filter(c.season == season)
+
     return mo.vstack(
         [
             mo.md(f"**My Team - {season} Season**"),
-            mo.hstack(
-                [season_selector, week_slider, view_selector], justify="start", gap=2
-            ),
+            mo.vstack([season_selector, compare_selector], align="start", gap=1),
+            _build_rank_line(season_df, team_abbr, compare_selector.value, week),
+            mo.vstack([week_slider, view_selector], align="start", gap=1),
             _build_radar(selected_row, axes, units),
         ]
     )
