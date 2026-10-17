@@ -58,6 +58,7 @@ OVERVIEW_AXES = {
     "SOS": "sos_rank",
     "Defense": "defense_rank",
 }
+
 OVERVIEW_UNITS = [
     ("Offense", "rgba(44,160,44,0.07)", 1),
     ("Special teams", "rgba(31,119,180,0.07)", 1),
@@ -106,6 +107,26 @@ def _build_rank_line(season_df, team_abbr, scope, through_week):
     hover = "%{fullData.name}, Week %{x}: #%{y}<extra></extra>"
     ranks = me["rank"].to_list()
 
+    # Decide which points get a label; everything else gets "" (draws nothing)
+    ranked = [(i, r) for i, r in enumerate(ranks) if r is not None]
+
+    best = min(r for _, r in ranked)   # best = smallest number (#1 is best)
+    worst = max(r for _, r in ranked)  # worst = biggest number
+
+    first_i = ranked[0][0]             # position of the first ranked week
+    last_i = ranked[-1][0]             # position of the last ranked week
+    best_i = ranks.index(best)         # position of the FIRST week at the best rank
+    worst_i = ranks.index(worst)       # position of the FIRST week at the worst rank
+
+    label_at = {first_i, last_i, best_i, worst_i}  # a set: duplicates collapse
+
+    labels = [f"#{r}" if i in label_at else "" for i, r in enumerate(ranks)]
+    positions = [
+        # worst goes below its dot, and so does a top-3 rank (it would hit the title)
+        "bottom center" if (i == worst_i or (r is not None and r <= 3)) else "top center"
+        for i, r in enumerate(ranks)
+    ]
+
     fig = go.Figure()
 
     # 1) Other teams first, so the selected team is drawn on top of them.
@@ -131,8 +152,8 @@ def _build_rank_line(season_df, team_abbr, scope, through_week):
             x=me["week"].to_list(),
             y=ranks,
             mode="lines+markers+text",  # "+text" turns the labels on
-            text=[f"#{r}" for r in ranks],  # "#3", "#7", ... same order as x and y
-            textposition="top center",
+            text=labels,
+            textposition=positions,
             textfont={"size": 12, "color": first["team_color"]},
             cliponaxis=False,  # let a label near the plot edge draw outside the axes
             name=team_abbr,
@@ -142,19 +163,36 @@ def _build_rank_line(season_df, team_abbr, scope, through_week):
         )
     )
 
+    legend_room = {"Team only": 0, "Division": 40, "Conference": 100}[scope]
+
     fig.update_layout(
-        title=f"Overall rank by week: {first['team_name']}",
-        height=450,
+        title={
+            "text": f"Overall rank by week: {first['team_name']}",
+            "font": {"size": 15},
+            "x": 0.02,
+            "xanchor": "left",
+        },
+        height=380 + legend_room,
+        margin={"l": 40, "r": 15, "t": 50, "b": 40 + legend_room},
         paper_bgcolor="white",
         plot_bgcolor="white",
         showlegend=scope != "Team only",
+        legend={
+            "orientation": "h",
+            "x": 0,
+            "xanchor": "left",
+            "y": -0.1,
+            "yanchor": "top",
+            "font": {"size": 11},
+        },
         xaxis={
-            "title": "Week",
             "dtick": 1,
+            "tickangle": 0,  # NEW: keep week numbers upright
             "range": [0.5, last_week + 0.5],
             "showgrid": True,
-            "gridcolor": "rgba(0,0,0,0.08)",  # very light gray
-            "ticks": "outside",  # small hash marks on the axis
+            "gridcolor": "rgba(0,0,0,0.08)",
+            "ticks": "outside",
+            "tickfont": {"size": 11},  # NEW
         },
         yaxis={
             "title": "Overall rank",
@@ -165,6 +203,17 @@ def _build_rank_line(season_df, team_abbr, scope, through_week):
             "gridcolor": "rgba(0,0,0,0.08)",
             "ticks": "outside",
         },
+        modebar_remove=[
+            "zoom2d",
+            "pan2d",
+            "select2d",
+            "lasso2d",
+            "zoomIn2d",
+            "zoomOut2d",
+            "autoScale2d",
+            "resetScale2d",
+            "toImage",
+        ],
     )
     return fig
 
