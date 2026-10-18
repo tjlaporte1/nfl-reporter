@@ -63,6 +63,25 @@ with app.setup:
     team_stats_lf = nfl.load_team_stats(seasons=stats_seasons).lazy()
     player_stats_lf = nfl.load_player_stats(seasons=stats_seasons).lazy()
 
+    # Old abbreviation -> current abbreviation (relocated franchises)
+    ABBR_FIX = {"OAK": "LV", "SD": "LAC", "STL": "LAR", "LA": "LAR"}
+    DEFUNCT = ["OAK", "SD", "STL"]  # old franchise rows to drop from the teams table
+
+    # Fix the frames we already loaded: take each one, change it, assign it back
+    teams_lf = (
+        teams_lf.filter(~c.team_abbr.is_in(DEFUNCT))
+        .with_columns(c.team_abbr.replace(ABBR_FIX))
+        .unique(subset="team_abbr", maintain_order=True)
+    )
+
+    schedules_lf = schedules_lf.with_columns(
+        c.home_team.replace(ABBR_FIX), c.away_team.replace(ABBR_FIX)
+    )
+
+    team_stats_lf = team_stats_lf.with_columns(
+        c.team.replace(ABBR_FIX), c.opponent_team.replace(ABBR_FIX)
+    )
+
     max_week = (
         schedules_lf.filter((c.season == max_season) & c.home_score.is_null())
         .select(c.week.min())
@@ -79,23 +98,6 @@ with app.setup:
         )
 
     max_week = int(max_week) if max_week is not None else 0
-
-     # Old abbreviation -> current abbreviation (relocated franchises)
-    ABBR_FIX = {"OAK": "LV", "SD": "LAC", "STL": "LA"}
-
-    teams_lf = nfl.load_teams().lazy().filter(~c.team_abbr.is_in(list(ABBR_FIX)))
-
-    schedules_lf = (
-            nfl.load_schedules(seasons=stats_seasons)
-            .lazy()
-            .with_columns(c.home_team.replace(ABBR_FIX), c.away_team.replace(ABBR_FIX))
-        )
-    
-    team_stats_lf = (
-            nfl.load_team_stats(seasons=stats_seasons)
-            .lazy()
-            .with_columns(c.team.replace(ABBR_FIX), c.opponent_team.replace(ABBR_FIX))
-        )
 
 
 @app.cell
@@ -205,11 +207,11 @@ def _():
 @app.cell
 def _():
     team_map = {
-            row[1]: row[0]
-            for row in teams_lf.select(["team_abbr", "team_name"])
-            .sort("team_name")
-            .collect()
-            .rows()
+        row[1]: row[0]
+        for row in teams_lf.select(["team_abbr", "team_name"])
+        .sort("team_name")
+        .collect()
+        .rows()
     }
     return (team_map,)
 
@@ -231,7 +233,12 @@ def _(schedules_display, team_map):
     _game_types = [t for t in _type_order if t in _types_in_data]
 
     page_nav = mo.ui.radio(
-        options=["Schedules", "My Team", "Matchups", "Players",],
+        options=[
+            "Schedules",
+            "My Team",
+            "Matchups",
+            "Players",
+        ],
         value="Schedules",
     )
 
@@ -303,8 +310,13 @@ def _(
 ):
     # Re-runs when the team (sidebar), season, week slider or view toggle changes.
     my_team_content = nflr_my_team.render(
-            graded_df, selected_team_abbr, team_season, team_week_slider, team_view, team_compare
-        )
+        graded_df,
+        selected_team_abbr,
+        team_season,
+        team_week_slider,
+        team_view,
+        team_compare,
+    )
     return (my_team_content,)
 
 
