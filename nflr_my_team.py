@@ -310,10 +310,9 @@ def _build_radar(row, axes, units):
 
 def make_view_selector():
     """The Overview / Detailed toggle that belongs to this page."""
-    return mo.ui.radio(
+    return mo.ui.dropdown(
         options=list(VIEWS.keys()),
         value="Overview",
-        inline=True,
         label="View",
     )
 
@@ -421,7 +420,7 @@ def render(
             mo.md(f"**My Team - {season} Season**"),
             mo.vstack([season_selector, compare_selector], align="start", gap=1),
             _build_rank_line(season_df, team_abbr, compare_selector.value, week),
-            mo.vstack([week_slider, view_selector], align="start", gap=1),
+            mo.hstack([week_slider, view_selector], justify="start", align="end", gap=2),
             _build_radar(selected_row, axes, units),
         ]
     )

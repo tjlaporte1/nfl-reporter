@@ -32,7 +32,7 @@
 
 import marimo
 
-__generated_with = "0.25.1"
+__generated_with = "0.25.2"
 app = marimo.App(width="medium", app_title="NFL Reporter")
 
 with app.setup:
@@ -46,6 +46,7 @@ with app.setup:
     import nflr_my_team
     import nflr_schedule
     import rank_functions as rk_fn
+    import nflr_matchups
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -190,7 +191,7 @@ def _():
                 [
                     mo.image(src=league_logo_src, width=50, alt=""),
                     mo.md(f"**NFL Reporter - {max_season}**"),
-                    mo.md("_v0.2_"),
+                    mo.md("_v0.3_"),
                 ],
                 justify="start",
                 align="center",
@@ -201,6 +202,64 @@ def _():
         justify="space-between",
         align="center",
     )
+    return
+
+
+@app.cell
+def _(graded_df, selected_team_abbr):
+    def _text_color(hex_color):
+            """White text on dark backgrounds, near-black on light ones."""
+            r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+            brightness = 0.299 * r + 0.587 * g + 0.114 * b  # how light the color looks
+            return "#111111" if brightness > 160 else "#ffffff"
+
+    if selected_team_abbr is None:
+        _banner = mo.md("")
+    else:
+        # Identity (always available): name, colors, logo, division
+        _team = (
+            teams_lf.filter(c.team_abbr == selected_team_abbr)
+            .select("team_name", "team_division", "team_color", "team_color2", "team_logo_espn")
+            .collect()
+            .row(0, named=True)
+        )
+
+        # Latest graded record and rank (may not exist yet early in the season)
+        _latest = graded_df.filter(
+            (c.season == max_season) & (c.team == selected_team_abbr)
+        ).sort("week")
+
+        _details = [_team["team_division"]]
+        if not _latest.is_empty():
+            _row = _latest.tail(1).row(0, named=True)
+            _details += [_row["record"], f"Overall rank #{_row['rank']} (Week {_row['week']})"]
+
+        _bg = _team["team_color"] or "#333333"
+        _accent = _team["team_color2"] or _bg
+        _fg = _text_color(_bg)
+        _logo = (
+            f'<img src="{_team["team_logo_espn"]}" alt="" '
+            'style="height:56px;width:56px;object-fit:contain;">'
+            if _team["team_logo_espn"]
+            else ""
+        )
+
+        _banner = mo.Html(
+            f"""
+            <div style="display:flex;align-items:center;gap:14px;
+                        background:{_bg};color:{_fg};
+                        border-bottom:6px solid {_accent};
+                        border-radius:10px;padding:12px 16px;">
+                {_logo}
+                <div>
+                    <div style="font-size:1.3em;font-weight:700;">{_team["team_name"]}</div>
+                    <div style="font-size:0.9em;opacity:0.9;">{" · ".join(_details)}</div>
+                </div>
+            </div>
+            """
+        )
+
+    _banner
     return
 
 
@@ -300,6 +359,27 @@ def _(schedules_display, selected_team_abbr, selected_week_num):
 
 
 @app.cell
+def _():
+    matchup_view = nflr_my_team.make_view_selector()
+    return (matchup_view,)
+
+
+@app.cell
+def _(schedules_display, selected_team_abbr, selected_week_num):
+    matchup_game = nflr_matchups.make_game_selector(
+            schedules_display, selected_week_num, selected_team_abbr)
+    return (matchup_game,)
+
+
+@app.cell
+def _(graded_df, matchup_game, matchup_view):
+    matchup_content = nflr_matchups.render(
+            graded_df, max_season, matchup_game, matchup_view
+        )
+    return (matchup_content,)
+
+
+@app.cell
 def _(
     graded_df,
     selected_team_abbr,
@@ -321,9 +401,9 @@ def _(
 
 
 @app.cell
-def _(my_team_content, page_nav, schedule_content):
+def _(matchup_content, my_team_content, page_nav, schedule_content):
     if page_nav.value == "Schedules":
-        out = schedule_content
+        out = mo.vstack([schedule_content, mo.md("---"), matchup_content])
     elif page_nav.value == "My Team":
         out = my_team_content
     elif page_nav.value == "Matchups":
