@@ -84,7 +84,6 @@ def make_game_selector(schedule_df, week_num=None, team_abbr=None):
         options=options,
         value=list(options.keys())[0],  # start on the first game in the list
         label="Game",
-        searchable=True,
     )
 
 
@@ -201,7 +200,7 @@ def _build_overlay_radar(away_row, home_row, axes, units, away_color, home_color
                 "ticktext": list(axes),
             },
         },
-        margin={"l": 60, "r": 60, "t": 30, "b": 40},
+        margin={"l": 100, "r": 100, "t": 30, "b": 40},
         height=600,
     )
     return fig

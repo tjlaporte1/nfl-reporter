@@ -42,11 +42,11 @@ with app.setup:
     import nflreadpy as nfl
     import polars as pl
     from polars import col as c
-
     import nflr_my_team
     import nflr_schedule
     import rank_functions as rk_fn
     import nflr_matchups
+    import nflr_power_rankings
 
     max_season = nfl.load_schedules().select(pl.col("season").max()).item()
     stats_max_season = (
@@ -106,8 +106,20 @@ def _():
     rank_lf = rk_fn.build_ranked_grades(schedules_lf, team_stats_lf)
     records_lf = rk_fn.get_weekly_records(schedules_lf)
 
-    full_lf = records_lf.join(rank_lf, on=("season", "week", "team"), how="left").join(
-        teams_lf, left_on="team", right_on="team_abbr", how="left"
+    full_lf = (
+        records_lf.join(
+            rank_lf, on=("season", "week", "team"), how="full", coalesce=True
+        )
+        .sort("season", "team", "week")
+        .with_columns(
+            # bye rows have no record: copy the previous week's down
+            pl.col(
+                "cumulative_wins", "cumulative_losses", "cumulative_ties", "record"
+            )
+            .fill_null(strategy="forward")
+            .over("season", "team")
+        )
+        .join(teams_lf, left_on="team", right_on="team_abbr", how="left")
     )
 
     team_weekly_lf = full_lf.select(
@@ -141,6 +153,7 @@ def _():
         "team_league_logo",
         "team_logo_squared",
         # final ranking
+        "played",
         "rank",
         # every sub-ranking
         pl.selectors.ends_with("_rank"),
@@ -191,7 +204,7 @@ def _():
                 [
                     mo.image(src=league_logo_src, width=50, alt=""),
                     mo.md(f"**NFL Reporter - {max_season}**"),
-                    mo.md("_v0.3_"),
+                    mo.md("_v0.4_"),
                 ],
                 justify="start",
                 align="center",
@@ -293,12 +306,12 @@ def _(schedules_display, team_map):
 
     page_nav = mo.ui.radio(
         options=[
-            "Schedules",
+            "Schedules & Matchups",
             "My Team",
-            "Matchups",
+            "Power Rankings",
             "Players",
         ],
-        value="Schedules",
+        value="Schedules & Matchups",
     )
 
     week_dropdown = mo.ui.dropdown(
@@ -359,23 +372,19 @@ def _(schedules_display, selected_team_abbr, selected_week_num):
 
 
 @app.cell
-def _():
-    matchup_view = nflr_my_team.make_view_selector()
-    return (matchup_view,)
-
-
-@app.cell
 def _(schedules_display, selected_team_abbr, selected_week_num):
+    matchup_view = nflr_my_team.make_view_selector()
     matchup_game = nflr_matchups.make_game_selector(
-            schedules_display, selected_week_num, selected_team_abbr)
-    return (matchup_game,)
+        schedules_display, selected_week_num, selected_team_abbr
+    )
+    return matchup_game, matchup_view
 
 
 @app.cell
 def _(graded_df, matchup_game, matchup_view):
     matchup_content = nflr_matchups.render(
-            graded_df, max_season, matchup_game, matchup_view
-        )
+        graded_df, max_season, matchup_game, matchup_view
+    )
     return (matchup_content,)
 
 
@@ -401,13 +410,42 @@ def _(
 
 
 @app.cell
-def _(matchup_content, my_team_content, page_nav, schedule_content):
-    if page_nav.value == "Schedules":
+def _(graded_df):
+    power_df = nflr_power_rankings.build_data(graded_df)
+    power_season = nflr_power_rankings.make_season_selector(power_df)
+    power_group = nflr_power_rankings.make_group_selector()
+
+    return power_df, power_group, power_season
+
+
+@app.cell
+def _(power_df, power_season):
+    power_week = nflr_power_rankings.make_week_selector(power_df, power_season.value)
+    return (power_week,)
+
+
+@app.cell
+def _(power_df, power_group, power_season, power_week):
+    power_content = nflr_power_rankings.render(
+            power_df, power_season, power_week, power_group
+        )
+    return (power_content,)
+
+
+@app.cell
+def _(
+    matchup_content,
+    my_team_content,
+    page_nav,
+    power_content,
+    schedule_content,
+):
+    if page_nav.value == "Schedules & Matchups":
         out = mo.vstack([schedule_content, mo.md("---"), matchup_content])
     elif page_nav.value == "My Team":
         out = my_team_content
-    elif page_nav.value == "Matchups":
-        out = mo.md("_Matchups coming soon_")
+    elif page_nav.value == "Power Rankings":
+        out = power_content
     elif page_nav.value == "Players":
         out = mo.md("_Player stats coming soon_")
     else:

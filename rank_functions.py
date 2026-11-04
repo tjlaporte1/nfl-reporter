@@ -271,7 +271,7 @@ def compute_component_scores(zscored_lf: pl.LazyFrame) -> pl.LazyFrame:
         c.z_net_ypp.fill_null(0.0),
         c.z_inside_20_rate.fill_null(0.0),
     )
-    
+
     return zscored_lf.with_columns(
         (c.z_pass_ypa * 0.40 + c.z_rush_ypc * 0.40 + c.z_td_rate * 0.20).alias(
             "offense_score"
@@ -309,7 +309,9 @@ def compute_sos(overall_partial_lf: pl.LazyFrame) -> pl.LazyFrame:
         "season", "week", "team", "overall_partial"
     )
 
-    matchups_lf = overall_partial_lf.select("season", "week", "team", "opponent_team")
+    matchups_lf = overall_partial_lf.select(
+        "season", "week", "team", "opponent_team", "played"
+    )
 
     joined_lf = matchups_lf.join(
         grade_lookup_lf.rename(
@@ -323,6 +325,7 @@ def compute_sos(overall_partial_lf: pl.LazyFrame) -> pl.LazyFrame:
         pl.when(c.week == 1)
         .then(0.0)
         .otherwise(c.opponent_grade)
+        .fill_null(0.0)  # a bye has no opponent: adds 0 to the sum
         .alias("opponent_grade_locked")
     )
 
@@ -332,12 +335,50 @@ def compute_sos(overall_partial_lf: pl.LazyFrame) -> pl.LazyFrame:
             c.opponent_grade_locked.cum_sum()
             .over("season", "team")
             .alias("opponent_grade_sum_ytd"),
-            c.week.cum_count().over("season", "team").alias("weeks_played_ytd"),
+            # was week.cum_count(); now only real games count
+            c.played.cast(pl.Int64)
+            .cum_sum()
+            .over("season", "team")
+            .alias("weeks_played_ytd"),
         )
         .with_columns(
             (c.opponent_grade_sum_ytd / c.weeks_played_ytd).alias("sos_score")
         )
         .select("season", "week", "team", "sos_score")
+    )
+
+
+def add_bye_weeks(cumulative_lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Give every team a row in every week, carrying season-to-date totals through byes.
+
+    Teams only have a row in weeks they played. Here we build every
+    (season, week, team) combination, attach the real rows, and copy each
+    "_ytd" total down into the empty bye rows. A "played" column records
+    which rows are real games.
+    """
+    # Every week of each season paired with every team of that season.
+    # Joining on "season" alone pairs each week with each team.
+    grid_lf = (
+        cumulative_lf.select("season", "week")
+        .unique()
+        .join(cumulative_lf.select("season", "team").unique(), on="season")
+    )
+
+    return (
+        grid_lf.join(
+            cumulative_lf.with_columns(pl.lit(True).alias("played")),
+            on=["season", "week", "team"],
+            how="left",  # keep every grid slot; bye slots come back empty
+        )
+        .with_columns(c.played.fill_null(False))
+        .sort("season", "team", "week")
+        .with_columns(
+            # A name starting with ^ and ending with $ is a regex, so this
+            # selects every column ending in "_ytd".
+            # fill_null(strategy="forward") copies the last value down, and
+            # .over("season", "team") keeps each team's values to itself.
+            pl.col("^.*_ytd$").fill_null(strategy="forward").over("season", "team")
+        )
     )
 
 
@@ -354,8 +395,8 @@ def build_weekly_grades(
     filtered_lf = filter_to_complete_weeks(team_stats_lf, complete_weeks_lf)
     joined_lf = join_opponent_stats(filtered_lf)
 
-    cumulative_lf = compute_cumulative_totals(joined_lf)
-    fg_cumulative_lf = compute_fg_cumulative_totals(joined_lf)
+    cumulative_lf = add_bye_weeks(compute_cumulative_totals(joined_lf))
+    fg_cumulative_lf = add_bye_weeks(compute_fg_cumulative_totals(joined_lf))
     fg_value_lf = compute_fg_value(fg_cumulative_lf)
 
     merged_cumulative_lf = cumulative_lf.join(
@@ -398,6 +439,7 @@ def build_weekly_grades(
         "week",
         "team",
         "opponent_team",
+        "played",
         # rate stats (pre-z-score, useful for sanity-checking real-world numbers)
         "pass_ypa",
         "rush_ypc",
